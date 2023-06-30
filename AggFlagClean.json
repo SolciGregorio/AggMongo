@@ -1,0 +1,212 @@
+{
+  _id: 1,
+  name: 1,
+  fecha: 1,
+  status: 1,
+  job_id: 1,
+  job: {
+    job_name: "$job.job_name",
+  },
+  result: {
+    document_class: "$result.document_class",
+    entities: {
+      $cond: [
+        {
+          $isArray: "$result.entities",
+        },
+        {
+          $map: {
+            input: "$result.entities",
+            as: "entity",
+            in: {
+              display_name:
+                "$$entity.display_name",
+              id: "$$entity.id",
+              text: "$$entity.text",
+              textNex: {
+                $cond: [
+                  {
+                    $ifNull: [
+                      "$$entity.textNex",
+                      false,
+                    ],
+                  },
+                  "$$entity.textNex",
+                  "$$entity.text",
+                ],
+              },
+              values: {
+                $cond: [
+                  {
+                    $isArray: "$$entity.values",
+                  },
+                  {
+                    $map: {
+                      input: "$$entity.values",
+                      as: "value",
+                      in: {
+                        entities: {
+                          $cond: [
+                            {
+                              $isArray:
+                                "$$value.entities",
+                            },
+                            {
+                              $map: {
+                                input:
+                                  "$$value.entities",
+                                as: "subEntity",
+                                in: {
+                                  display_name:
+                                    "$$subEntity.display_name",
+                                  id: "$$subEntity.id",
+                                  text: "$$subEntity.text",
+                                  textNex: {
+                                    $cond: [
+                                      {
+                                        $ifNull: [
+                                          "$$subEntity.textNext",
+                                          false,
+                                        ],
+                                      },
+                                      "$$subEntity.textNext",
+                                      "$$subEntity.text",
+                                    ],
+                                  },
+                                },
+                              },
+                            },
+                            "#NO_ES_ARRAY",
+                          ],
+                        },
+                      },
+                    },
+                  },
+                  "#NO_ES_ARRAY",
+                ],
+              },
+            },
+          },
+        },
+        "#NO_ES_ARRAY",
+      ],
+    },
+  },
+  is_modified: {
+    $cond: [
+      {
+        $eq: ["$result.entities", null],
+      },
+      false,
+      {
+        $anyElementTrue: {
+          $ifNull: [
+            {
+              $concatArrays: [
+                {
+                  $map: {
+                    input: "$result.entities",
+                    as: "entity",
+                    in: {
+                      $cond: {
+                        if: {
+                          $and: [
+                            //check if text and textNext exist
+                            {
+                              $ifNull: [
+                                "$$entity.text",
+                                false,
+                              ],
+                            },
+                            {
+                              $ifNull: [
+                                "$$entity.textNext",
+                                false,
+                              ],
+                            },
+                            {
+                              $not: {
+                                $eq: [
+                                  "$$entity.text",
+                                  "$$entity.textNext",
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                        then: true,
+                        else: false,
+                      },
+                    },
+                  },
+                },
+                {
+                  $map: {
+                    input: {
+                      $reduce: {
+                        input: "$result.entities",
+                        initialValue: [],
+                        in: {
+                          $concatArrays: [
+                            "$$value",
+                            {
+                              $cond: {
+                                if: {
+                                  $isArray:
+                                    "$$this.values",
+                                },
+                                then: "$$this.values",
+                                else: [],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    },
+                    as: "nestedEntity",
+                    in: {
+                      $anyElementTrue: {
+                        $map: {
+                          input:
+                            "$$nestedEntity.entities",
+                          as: "nestedEntityValue",
+                          in: {
+                            $and: [
+                              //check if text and textNext exist
+                              {
+                                $ifNull: [
+                                  "$$nestedEntityValue.text",
+                                  false,
+                                ],
+                              },
+                              {
+                                $ifNull: [
+                                  "$$nestedEntityValue.textNext",
+                                  false,
+                                ],
+                              },
+                              {
+                                $not: {
+                                  $eq: [
+                                    "$$nestedEntityValue.text",
+                                    "$$nestedEntityValue.textNext",
+                                  ],
+                                },
+                              },
+                            ],
+                            //$eq: ["$$nestedEntityValue.text", "$$nestedEntityValue.textNext"]
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+            [],
+          ],
+        },
+      },
+    ],
+  },
+}
