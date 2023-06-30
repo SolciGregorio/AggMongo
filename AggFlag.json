@@ -6,9 +6,6 @@
    fecha: 1,
    status: 1,
    job_id: 1,
-   job: {
-    job_name: "$job.job_name",
-   },
    result: {
     document_class: "$result.document_class",
     entities: {
@@ -22,10 +19,10 @@
          display_name: "$$entity.display_name",
          id: "$$entity.id",
          text: "$$entity.text",
-         textNex: {
+         textNew: {
           $cond: [
-           { $ifNull: ["$$entity.textNex", false] },
-           "$$entity.textNex",
+           { $ifNull: ["$$entity.textNew", false] },
+           "$$entity.textNew",
            "$$entity.text"
           ]
          },
@@ -48,10 +45,10 @@
                    display_name: "$$subEntity.display_name",
                    id: "$$subEntity.id",
                    text: "$$subEntity.text",
-                   textNex: {
+                   textNew: {
                     $cond: [
-                     { $ifNull: ["$$subEntity.textNex", false] },
-                     "$$subEntity.textNex",
+                     { $ifNull: ["$$subEntity.textNew", false] },
+                     "$$subEntity.textNew",
                      "$$subEntity.text"
                     ]
                    }
@@ -90,10 +87,10 @@
                         $cond: {
                           if: {
                             $and: [
-                              //check if text and newText exist
+                              //check if text and textNew exist
                               { $ifNull: ["$$entity.text", false] },
-                              { $ifNull: ["$$entity.newText", false] },
-                              { $not: { $eq: ["$$entity.text", "$$entity.newText"] }}
+                              { $ifNull: ["$$entity.textNew", false] },
+                              { $not: { $eq: ["$$entity.text", "$$entity.textNew"] }}
                             ]
                           },
                           then: true,
@@ -130,12 +127,12 @@
                             as: "nestedEntityValue",
                             in: { 
                               $and: [
-                                //check if text and newText exist
+                                //check if text and textNew exist
                                 { $ifNull: ["$$nestedEntityValue.text", false] },
-                                { $ifNull: ["$$nestedEntityValue.newText", false] },
-                                { $not: { $eq: ["$$nestedEntityValue.text", "$$nestedEntityValue.newText"] }}
+                                { $ifNull: ["$$nestedEntityValue.textNew", false] },
+                                { $not: { $eq: ["$$nestedEntityValue.text", "$$nestedEntityValue.textNew"] }}
                               ]
-                              //$eq: ["$$nestedEntityValue.text", "$$nestedEntityValue.newText"] 
+                              //$eq: ["$$nestedEntityValue.text", "$$nestedEntityValue.textNew"] 
                             }
                           }
                         }
